@@ -2,7 +2,7 @@
 
 class htmlArray
 {
-    private $htmlData = '';
+    private $htmlData;
 
     function __construct ($html)
     {
