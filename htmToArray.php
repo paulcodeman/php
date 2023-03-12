@@ -1,15 +1,15 @@
 <?php
 
-class htmlArray
+class HtmlArray
 {
     private $htmlData;
 
-    function __construct ($html)
+    public function __construct($html)
     {
         $this->htmlData = $html;
     }
 
-    public function getArray ($html = null)
+    public function getArray($html = null)
     {
         if ($html) {
             $this->htmlData = $html;
@@ -21,41 +21,43 @@ class htmlArray
 
         @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
 
-        return $this->xml_to_array($dom->documentElement);
+        return $this->xmlToArray($dom->documentElement);
     }
 
-    private function xml_to_array ($root)
+    private function xmlToArray($node)
     {
-        $result = array();
+        $result = [];
 
-        if ($root->hasChildNodes()) {
-            $children = $root->childNodes;
+        if ($node->hasChildNodes()) {
+            $children = $node->childNodes;
+
             foreach ($children as $child) {
                 $attributes = null;
                 if ($child->hasAttributes()) {
                     $attributes = [];
-                    $attrs = $child->attributes;
-                    foreach ($attrs as $attr) {
+
+                    foreach ($child->attributes as $attr) {
                         $attributes[$attr->name] = $attr->value;
                     }
                 }
+
                 $data = null;
-                if ($child->nodeType == XML_TEXT_NODE) {
-                    $data = trim($child->nodeValue);
-                } elseif ($child->nodeType == XML_CDATA_SECTION_NODE) {
+                if ($child->nodeType == XML_TEXT_NODE || $child->nodeType == XML_CDATA_SECTION_NODE) {
                     $data = trim($child->nodeValue);
                 }
 
-                $children = null;
+                $childrenArray = null;
                 if ($child->hasChildNodes()) {
-                    $children = $this->xml_to_array($child);
+                    $childrenArray = $this->xmlToArray($child);
                 }
+
                 $item = [
-                    'tagName' => $child->nodeName
+                    'tagName' => $child->nodeName,
+                    'attributes' => $attributes,
+                    'data' => $data,
+                    'children' => $childrenArray
                 ];
-                if ($attributes) $item['attributes'] = $attributes;
-                if (@strlen($data)) $item['data'] = $data;
-                if ($children) $item['children'] = $children;
+
                 $result[] = $item;
             }
         }
@@ -63,5 +65,12 @@ class htmlArray
         return $result;
     }
 }
+
+$html = '<div class="example"><h1>Title</h1><p>Some text</p></div>';
+$htmlArray = new HtmlArray($html);
+$array = $htmlArray->getArray();
+
+print_r($array);
+
 
 ?>
